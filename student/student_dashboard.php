@@ -1,0 +1,84 @@
+<?php
+
+require('../php/config.php');
+
+session_start();
+
+studentCheck();
+
+$sql4 = "SELECT first_name, points
+         FROM users
+         WHERE role=1
+         ORDER BY points DESC
+         LIMIT 5";
+$result4 = $conn->query($sql4);
+$tutors = [];
+$points = [];
+while ($row = $result4->fetch_assoc()) {
+    $tutors[] = $row['first_name'] . " " . $row['last_name'];
+    $points[] = $row['points'];
+}
+
+$pts_sql = "SELECT points FROM users WHERE user_id = '{$_SESSION['user_id']}'";
+$pts_result = $conn->query($pts_sql);
+$pts = $pts_result->fetch_assoc();
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard นักเรียน | SPMT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="../css/student.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container-custom">
+        <?php
+        
+        include('student_sidebar.html');
+        
+        ?>
+        <div class="main">
+            <div class="profile">
+                <h1>ข้อมูลผู้ใช้</h1>
+                <p><?= $_SESSION['title'] . " " . $_SESSION['first_name'] . " " . $_SESSION['last_name']; ?></p>
+                <p><?= "ชั้นมัธยมศึกษาปีที่ " . $_SESSION['grade']; ?></p>
+                <p>Merit Point ของคุณ<span style="color: #1e3a8a;"><?php echo $pts['points']; ?> pts</span></p>
+            </div>
+            <div class="ranking">
+                <h2>อันดับคะแนนติวเตอร์ (วันนี้)</h2>
+                <canvas id="tutorChart"></canvas>
+                <script>
+                    new Chart(document.getElementById('tutorChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: <?php echo json_encode($tutors); ?>,
+                            datasets: [{
+                                label: 'คะแนนความดีสะสม',
+                                data: <?php echo json_encode($points); ?>,
+                                backgroundColor: '#F59E0B'
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                </script>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
