@@ -6,9 +6,8 @@ require('../php/config.php');
 
 studentCheck();
 
-$pts_sql = "SELECT points FROM users WHERE user_id = '{$_SESSION['user_id']}'";
-$pts_result = $conn->query($pts_sql);
-$pts = $pts_result->fetch_assoc();
+$user_id = $_SESSION['user_id'];
+$userpts = userPoints($conn, $user_id);
 
 ?>
 
@@ -35,7 +34,7 @@ $pts = $pts_result->fetch_assoc();
         <div class="main">
             <div class="merit-banner">
                 <small>Merit Points ของคุณ</small>
-                <h1 class="fw-bold"><?php echo $pts['points']; ?> pts</h1>
+                <h1 class="fw-bold"><?php echo $userpts; ?> pts</h1>
             </div>
 
             <div class="card card-custom p-4">
@@ -44,7 +43,6 @@ $pts = $pts_result->fetch_assoc();
                 <?php if (isset($_SESSION['reward_notification'])): ?>
                     <div class="alert alert-<?= $_SESSION['reward_notif_type'] ?> alert-dismissible fade show rounded-3 mb-4" role="alert">
                         <i class="fas fa-info-circle me-2"></i><?= $_SESSION['reward_notification'] ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                     <?php unset($_SESSION['reward_notification']);
                     unset($_SESSION['reward_notif_type']); ?>
@@ -52,8 +50,7 @@ $pts = $pts_result->fetch_assoc();
 
                 <div class="row g-4">
                     <?php
-                    $res = mysqli_query($conn, "SELECT * FROM reward");
-                    $userpts = $pts['points'];
+                    $res = mysqli_query($conn, "SELECT * FROM reward WHERE reward_quota > 0");
                     while ($row = mysqli_fetch_assoc($res)) {
                         $can_redeem = ($userpts >= $row['required_points']);
                     ?>
@@ -62,10 +59,11 @@ $pts = $pts_result->fetch_assoc();
                                 <div class="flex-grow-1">
                                     <h5 class="fw-bold mb-2 text-dark"><?php echo $row['reward_name']; ?></h5>
                                     <p class="text-muted small mb-3"><?php echo $row['description']; ?></p>
+                                    <p>คงเหลือ: <?php echo $row['reward_quota']; ?></p>
                                     <div class="fw-bold mb-3" style="color: #f59e0b; font-size: 1.25rem;"><i class="fas fa-coins me-2"></i><?php echo $row['required_points']; ?> pts</div>
                                 </div>
 
-                                <form action="student_act.php" method="POST">
+                                <form action="reward_act.php" method="POST">
                                     <input type="hidden" name="type" value="redeem_reward">
                                     <input type="hidden" name="reward_id" value="<?php echo $row['reward_id']; ?>">
                                     <input type="hidden" name="required_points" value="<?php echo $row['required_points']; ?>">

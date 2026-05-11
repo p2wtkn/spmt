@@ -1,12 +1,12 @@
 <?php
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
 
 require('../php/config.php');
+
+teacherCheck();
+
+if (isset($_GET['type'])) {
 
 $type = $_GET['type'];
 
@@ -76,13 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['type'] == 'update_confirm') 
 
 <body>
     <div class="container-custom">
-        <div class="sidebar">
-            <h2><a href="../index.php">SPMT | คุณครู</a></h2>
-            <a href="teacher_dashboard.php">Dashboard</a>
-            <a href="teaching_checkup.php">Checkup</a>
-            <a href="reward_management.php">Reward</a>
-            <a href="../auth/logout.php" class="btn-logout">ออกจากระบบ</a>
-        </div>
+        <?php
+        
+        include('teacher_sidebar.html');
+
+        ?>
 
         <div class="main">
             <div class="card card-custom p-4 mx-auto" style="max-width: 800px; width: 100%;">
@@ -108,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['type'] == 'update_confirm') 
 
                 <div class="mb-4 p-3 bg-light rounded shadow-sm border">
                     <h6 class="fw-bold text-dark"><i class="fas fa-file-alt text-primary me-2"></i>หลักฐานการสอน</h6>
-                    <a href="<?php $data['evidence']; ?>" class="btn btn-outline-primary btn-sm mt-2" target="_blank"><i class="fas fa-external-link-alt me-2"></i>กดดูหลักฐานที่แนบไว้</a>
+                    <a href="<?php echo $data['evidence']; ?>" class="btn btn-outline-primary btn-sm mt-2" target="_blank"><i class="fas fa-external-link-alt me-2"></i>กดดูหลักฐานที่แนบไว้</a>
                 </div>
 
                 <hr class="text-muted">
@@ -162,3 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $_POST['type'] == 'update_confirm') 
 </body>
 
 </html>
+<?php 
+}
+?>

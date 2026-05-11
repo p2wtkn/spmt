@@ -22,13 +22,11 @@ teacherCheck();
 
 <body>
     <div class="container-custom">
-        <div class="sidebar">
-            <h2><a href="../index.php">SPMT | คุณครู</a></h2>
-            <a href="teacher_dashboard.php">Dashboard</a>
-            <a href="teaching_checkup.php">Checkup</a>
-            <a href="reward_management.php">Reward</a>
-            <a href="../auth/logout.php" class="btn-logout">ออกจากระบบ</a>
-        </div>
+        <?php
+        
+        include('teacher_sidebar.html');
+        
+        ?>
 
         <div class="main">
             <div class="card card-custom p-4">
@@ -39,8 +37,7 @@ teacherCheck();
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center">#</th>
-                                <th>หลักฐานการสอน</th>
-                                <th class="text-center">ผู้สอนยืนยัน</th>
+                                <th>ชื่อผู้สอน</th>
                                 <th class="text-center">คุณครูยืนยัน</th>
                                 <th>หมายเหตุ</th>
                                 <th class="text-center">จัดการ</th>
@@ -48,8 +45,14 @@ teacherCheck();
                         </thead>
                         <tbody>
                             <?php
-                            $sql = "SELECT * FROM teaching_log";
-                                    // --WHERE teacher_confirmed = 0";
+                            $sql = "SELECT tl.*, td.td_id, u.first_name, u.last_name 
+                                    FROM teaching_log tl
+                                    LEFT JOIN teaching_demand td ON tl.td_id = td.td_id
+                                    LEFT JOIN users u ON td.user_id = u.user_id
+                                    WHERE tl.tutor_confirmed = 1
+                                    AND tl.teacher_confirmed = 0
+                                    ORDER BY tl.teaching_log_id DESC";
+
                             $result = mysqli_query($conn, $sql);
 
                             if (mysqli_num_rows($result) > 0) {
@@ -60,11 +63,13 @@ teacherCheck();
                                         <td class="text-center fw-bold text-muted"><?php echo $i; ?></td>
                                         
                                         <td>
-                                            <?php if(isset($row['evidence']) && $row['evidence'] != ''): ?>
-                                                <span class="badge bg-success bg-opacity-10 text-success"><i class="fas fa-image me-1"></i>มีหลักฐาน</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary"><i class="fas fa-times me-1"></i>ไม่มีหลักฐาน</span>
-                                            <?php endif; ?>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-secondary text-white rounded-circle me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold"><?php echo $row['first_name'] . ' ' . $row['last_name']; ?></div>
+                                                    <div class="text-muted
                                         </td>
 
                                         <td class="text-center">

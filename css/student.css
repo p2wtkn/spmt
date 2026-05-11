@@ -283,6 +283,13 @@ body::before {
   border-color: #3b82f6 !important;
 }
 
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     width: 220px;

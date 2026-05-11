@@ -7,15 +7,43 @@ require('../php/config.php');
 teacherCheck();
 
 if (isset($_GET['delete_id'])) {
-    deleteReward($conn);
+    $id = (int)$_GET['delete_id'];
+
+    mysqli_query($conn, "DELETE FROM reward WHERE reward_id = $id");
+    header("Location: reward_management.php");
+    exit;
 }
 
 if (isset($_POST['update_reward'])) {
-    updateReward($conn);
+    $id = (int)$_POST['reward_id'];
+    $name = mysqli_real_escape_string($conn, $_POST['reward_name']);
+    $desc = mysqli_real_escape_string($conn, $_POST['description']);
+    $points = (int)$_POST['required_points'];
+    $quota = (int)$_POST['reward_quota'];
+
+    $sql = "UPDATE reward SET reward_name='$name', description='$desc', required_points='$points', reward_quota='$quota' WHERE reward_id=$id";
+    mysqli_query($conn, $sql);
+    header("Location: reward_management.php");
+    exit;
 }
 
 if (isset($_POST['save_new'])) {
-    createReward($conn);
+    $names = $_POST['reward_name'];
+    $descs = $_POST['description'];
+    $points = $_POST['required_points'];
+    $quotas = $_POST['reward_quota'];
+
+    foreach ($names as $key => $val) {
+        if (!empty($val)) {
+            $n = mysqli_real_escape_string($conn, $val);
+            $d = mysqli_real_escape_string($conn, $descs[$key]);
+            $p = (int)$points[$key];
+            $q = (int)$quotas[$key];
+            mysqli_query($conn, "INSERT INTO reward (reward_name, description, required_points, reward_quota) VALUES ('$n', '$d', '$p', '$q')");
+        }
+    }
+    header("Location: reward_management.php");
+    exit;
 }
 
 ?>
@@ -60,8 +88,8 @@ if (isset($_POST['save_new'])) {
                                 <tr>
                                     <td><input type="text" name="reward_name[]" class="form-control" required></td>
                                     <td><input type="text" name="description[]" class="form-control"></td>
-                                    <td><input type="number" name="required_points[]" class="form-control" required></td>
-                                    <td><input type="number" name="reward_quota[]" class="form-control" required></td>
+                                    <td><input type="number" min="1" max="200" name="required_points[]" class="form-control" required></td>
+                                    <td><input type="number" min="1" max="20" name="reward_quota[]" class="form-control" required></td>
                                     <td><button type="button" id="add" class="btn btn-success"><i class="fas fa-plus"></i></button></td>
                                 </tr>
                             </tbody>
@@ -77,24 +105,23 @@ if (isset($_POST['save_new'])) {
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center">ID</th>
                                 <th>ชื่อรางวัล</th>
                                 <th>รายละเอียด</th>
                                 <th class="text-center">คะแนน</th>
                                 <th class="text-center">จำนวน</th>
-                                <th class="text-center">จัดการ</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            $res = mysqli_query($conn, "SELECT * FROM reward ORDER BY reward_id DESC");
+                            $res = mysqli_query($conn, "SELECT *
+                                                        FROM reward
+                                                        ORDER BY reward_id DESC");
                             while ($row = mysqli_fetch_assoc($res)) {
                             ?>
                                 <tr>
                                     <form action="reward_management.php" method="post">
                                         <input type="hidden" name="reward_id" value="<?php echo $row['reward_id']; ?>">
-
-                                        <td class="text-center fw-bold"><?php echo $row['reward_id']; ?></td>
 
                                         <td class="view-mode"><?php echo $row['reward_name']; ?></td>
                                         <td class="view-mode text-muted small"><?php echo $row['description']; ?></td>
@@ -103,8 +130,8 @@ if (isset($_POST['save_new'])) {
 
                                         <td class="edit-mode"><input type="text" name="reward_name" class="form-control form-control-sm" value="<?php echo $row['reward_name']; ?>"></td>
                                         <td class="edit-mode"><input type="text" name="description" class="form-control form-control-sm" value="<?php echo $row['description']; ?>"></td>
-                                        <td class="edit-mode"><input type="number" name="required_points" class="form-control form-control-sm" value="<?php echo $row['required_points']; ?>"></td>
-                                        <td class="edit-mode"><input type="number" name="reward_quota" class="form-control form-control-sm" value="<?php echo $row['reward_quota']; ?>"></td>
+                                        <td class="edit-mode"><input min="1" max="200" type="number" name="required_points" class="form-control form-control-sm" value="<?php echo $row['required_points']; ?>"></td>
+                                        <td class="edit-mode"><input min="1" max="20" type="number" name="reward_quota" class="form-control form-control-sm" value="<?php echo $row['reward_quota']; ?>"></td>
 
                                         <td class="text-center">
                                             <div class="view-mode btn-group">
@@ -133,8 +160,8 @@ if (isset($_POST['save_new'])) {
                 $('#dynamic_field tbody').append('<tr>' +
                     '<td><input type="text" name="reward_name[]" class="form-control" required></td>' +
                     '<td><input type="text" name="description[]" class="form-control"></td>' +
-                    '<td><input type="number" name="required_points[]" class="form-control" required></td>' +
-                    '<td><input type="number" name="reward_quota[]" class="form-control" required></td>' +
+                    '<td><input type="number" min="1" max="200" name="required_points[]" class="form-control" required></td>' +
+                    '<td><input type="number" min="1" max="20" name="reward_quota[]" class="form-control" required></td>' +
                     '<td><button type="button" class="btn btn-danger btn_remove"><i class="fas fa-times"></i></button></td></tr>');
             });
             $(document).on('click', '.btn_remove', function() {

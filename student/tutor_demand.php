@@ -30,7 +30,7 @@ studentCheck();
         <div class="main">
             <div class="card card-custom">
                 <h4 class="text-primary fw-bold mb-4"><i class="fas fa-chalkboard-teacher me-2"></i>ความต้องการช่วยสอน</h4>
-                <form action="student_act.php" method="post">
+                <form action="tutor_act.php" method="post">
                     <div class="table-responsive">
                         <table class="table table-borderless align-middle">
                             <thead class="small text-muted">
@@ -57,8 +57,12 @@ studentCheck();
                                         <select name="level" class="form-select" required>
                                             <option value="">ระดับชั้น</option>
                                             <?php
-                                            $user = $_SESSION['user_id'];
-                                            $sql = "SELECT grade FROM users WHERE user_id='$user'";
+
+                                            $user_id = $_SESSION['user_id'];
+
+                                            $sql = "SELECT grade
+                                                    FROM users
+                                                    WHERE user_id='$user_id'";
                                             $result = mysqli_query($conn, $sql);
                                             $row = $result->fetch_assoc();
 
@@ -69,6 +73,7 @@ studentCheck();
                                             <?php
                                                 $i++;
                                             }
+
                                             ?>
                                         </select>
                                     </td>
@@ -91,26 +96,31 @@ studentCheck();
                                 </tr>
                             </tbody>
                         </table>
+                        <?php if (isset($_SESSION['td_notification'])): ?>
+                            <div class="alert alert-<?= $_SESSION['td_notif_type'] ?> alert-dismissible fade show rounded-3 mb-4" role="alert">
+                                <i class="fas fa-info-circle me-2"></i><?php echo $_SESSION['td_notification']; ?>
+                            </div>
+                            <?php unset($_SESSION['td_notification']);
+                            unset($_SESSION['td_notif_type']); ?>
+                        <?php endif; ?>
                         <button type="submit" name="tutor_submit" class="btn btn-primary shadow-sm mt-2 px-4"><i class="fas fa-hands-helping me-2"></i>จับคู่</button>
-                        <p><?= $_SESSION['td_notification'] ?></p>
                     </div>
                 </form>
             </div>
 
             <div class="card card-custom">
                 <h5 class="fw-bold mb-4"><i class="fas fa-list me-2"></i>รายการความต้องการสอนของคุณ</h5>
-                <form action="student_act.php" method="POST">
+                <form action="tutor_act.php" method="POST">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-center">#</th>
-                                    <th>วิชา</th>
-                                    <th>ระดับชั้น</th>
-                                    <th>ปี/เดือน/วัน</th>
-                                    <th>ช่วงเวลา</th>
+                                    <th class="text-center">วิชา</th>
+                                    <th class="text-center">ระดับชั้น</th>
+                                    <th class="text-center">ปี/เดือน/วัน</th>
+                                    <th class="text-center">ช่วงเวลา</th>
                                     <th class="text-center">สถานะ</th>
-                                    <th class="text-center"></th>
+                                    <th class="text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -118,46 +128,62 @@ studentCheck();
 
                                 $user_id = $_SESSION['user_id'];
 
-                                $td_sql = $td_sql = "SELECT 
-                                            td.td_id, 
-                                            tl.teaching_log_id, 
-                                            s.subject_name,
-                                            td.teaching_level,
-                                            td.available_day,
-                                            td.available_time
-                                        FROM teaching_demand td
-                                        LEFT JOIN teaching_log tl ON td.td_id = tl.td_id
-                                        LEFT JOIN subject s ON td.subject_id = s.subject_id
-                                        WHERE td.user_id = '$user_id'";
+                                $td_sql = "SELECT 
+                                                td.*, 
+                                                tl.teaching_log_id,
+                                                tl.tutor_confirmed, 
+                                                s.subject_name
+                                            FROM teaching_demand td
+                                            LEFT JOIN teaching_log tl
+                                            ON td.td_id = tl.td_id
+                                            LEFT JOIN subject s
+                                            ON td.subject_id = s.subject_id
+                                            WHERE td.user_id = '$user_id'
+                                            ORDER BY td.available_day";
 
                                 $td_result = $conn->query($td_sql);
 
                                 if (mysqli_num_rows($td_result) > 0) {
                                     $i = 1;
                                     while ($data = mysqli_fetch_array($td_result)) {
+                                        $subject = $data['subject_name'];
+                                        $grade = $data['teaching_level'];
+                                        $date = $data['available_day'];
+                                        $timePeriod = $data['available_time'];
+                                        $time = timeSwitch($timePeriod);
+                                        $match_id = $data['teaching_log_id'];
+                                        $td_id = $data['td_id'];
+                                        $tutor_confirmed = $data['tutor_confirmed'];
                                 ?>
                                         <tr>
-                                            <td class="text-center fw-bold"><?php echo $i; ?></td>
-                                            <td><?php echo $data['subject_name'] ?></td>
-                                            <td><?php echo "ชั้นมัธยมศึกษาปีที่ " . $data['teaching_level'] ?></td>
-                                            <td><?php echo $data['available_day']; ?></td>
-                                            <td><?php $no = $data['available_time'];
-                                                timeSwitch($no); ?></td>
-                                            <td class="text-center">
-                                                <?php if($data['teaching_log_id']): ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success mb-1">จับคู่สำเร็จ</span><br>
-                                                    <a href="student_act.php?type=edit&teaching_log_id=<?= $data['teaching_log_id']; ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit me-1"></i>ยืนยันการสอน</a>
-                                                <?php else: ?>
-                                                    <span class="badge bg-warning bg-opacity-10 text-warning">รอกับคู่</span>
-                                                <?php endif; ?>
-                                            </td>
+                                            <?php if($tutor_confirmed == 0):?>
+                                                <td class="text-center"><?php echo $subject; ?></td>
+                                                <td class="text-center"><?php echo "ชั้นมัธยมศึกษาปีที่ " . $grade; ?></td>
+                                                <td class="text-center"><?php echo $date; ?></td>
+                                                <td class="text-center"><?php echo $time; ?></td>
+                                                <td class="text-center">
+                                                    <?php if($match_id): ?>
+                                                        <span class="badge bg-success bg-opacity-10 text-success mb-1">จับคู่สำเร็จ</span><br>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-warning bg-opacity-10 text-warning">รอจับคู่</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <?php if($match_id): ?>
+                                                        <a href="tutor_act.php?type=td_detail&teaching_log_id=<?= $data['teaching_log_id']; ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-info-circle me-1"></i>รายละเอียด</a>
+                                                    <?php else: ?>
+                                                        <a href="tutor_act.php?type=edit&td_id=<?php echo $td_id ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit me-1"></i>แก้ไข</a>
+                                                        <a href="tutor_act.php?type=delete&td_id=<?php echo $td_id ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('ยืนยันการลบ?')"><i class="fas fa-trash"></i>ลบ</a>
+                                                    <?php endif; ?>
+                                                </td>
+                                            <?php endif;?>
                                         </tr>
                                     <?php
                                         $i++;
                                     }
                                 } else { ?>
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-4">ไม่พบข้อมูลความต้องการเรียน</td>
+                                        <td colspan="5" class="text-center text-muted py-4">เพิ่มความต้องการสอนของคุณ</td>
                                     </tr>
                                 <?php
                                 }

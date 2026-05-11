@@ -49,7 +49,7 @@ $subjectColors = [
     "ภาษาไทย" => "#2563EB",
     "คณิตศาสตร์" => "#10B981",
     "วิทยาศาสตร์" => "#F59E0B",
-    "สังคม" => "#EF4444",
+    "สังคมศึกษา" => "#EF4444",
     "ภาษาอังกฤษ" => "#8B5CF6"
 ];
 
@@ -94,17 +94,7 @@ while ($row = $result3->fetch_assoc()) {
     $matches[] = $row['total_matches'];
 }
 
-$sql4 = "SELECT first_name, points
-         FROM users
-         ORDER BY points DESC
-         LIMIT 5";
-$result4 = $conn->query($sql4);
-$tutors = [];
-$points = [];
-while ($row = $result4->fetch_assoc()) {
-    $tutors[] = $row['first_name'] . " " . $row['last_name'];
-    $points[] = $row['points'];
-}
+$data = pointRanking($conn);
 
 ?>
 
@@ -242,10 +232,10 @@ while ($row = $result4->fetch_assoc()) {
         new Chart(document.getElementById('tutorChart'), {
             type: 'bar',
             data: {
-                labels: <?php echo json_encode($tutors); ?>,
+                labels: <?php echo json_encode($data['tutors']); ?>,
                 datasets: [{
                     label: 'คะแนนความดีสะสม',
-                    data: <?php echo json_encode($points); ?>,
+                    data: <?php echo json_encode($data['points']); ?>,
                     backgroundColor: '#F59E0B'
                 }]
             },

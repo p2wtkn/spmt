@@ -1,27 +1,16 @@
 <?php
 
-require('../php/config.php');
-
 session_start();
+
+require('../php/config.php');
 
 studentCheck();
 
-$sql4 = "SELECT first_name, points
-         FROM users
-         WHERE role=1
-         ORDER BY points DESC
-         LIMIT 5";
-$result4 = $conn->query($sql4);
-$tutors = [];
-$points = [];
-while ($row = $result4->fetch_assoc()) {
-    $tutors[] = $row['first_name'] . " " . $row['last_name'];
-    $points[] = $row['points'];
-}
+$data = pointRanking($conn);
 
-$pts_sql = "SELECT points FROM users WHERE user_id = '{$_SESSION['user_id']}'";
-$pts_result = $conn->query($pts_sql);
-$pts = $pts_result->fetch_assoc();
+$user_id = $_SESSION['user_id'];
+
+$userpts = userPoints($conn, $user_id);
 
 ?>
 
@@ -50,7 +39,7 @@ $pts = $pts_result->fetch_assoc();
                 <h1>ข้อมูลผู้ใช้</h1>
                 <p><?= $_SESSION['title'] . " " . $_SESSION['first_name'] . " " . $_SESSION['last_name']; ?></p>
                 <p><?= "ชั้นมัธยมศึกษาปีที่ " . $_SESSION['grade']; ?></p>
-                <p>Merit Point ของคุณ<span style="color: #1e3a8a;"><?php echo $pts['points']; ?> pts</span></p>
+                <p>Merit Point ของคุณ<span style="color: #1e3a8a;"><?php echo $userpts; ?> pts</span></p>
             </div>
             <div class="ranking">
                 <h2>อันดับคะแนนติวเตอร์ (วันนี้)</h2>
@@ -59,10 +48,10 @@ $pts = $pts_result->fetch_assoc();
                     new Chart(document.getElementById('tutorChart'), {
                         type: 'bar',
                         data: {
-                            labels: <?php echo json_encode($tutors); ?>,
+                            labels: <?php echo json_encode($data['tutors']); ?>,
                             datasets: [{
                                 label: 'คะแนนความดีสะสม',
-                                data: <?php echo json_encode($points); ?>,
+                                data: <?php echo json_encode($data['points']); ?>,
                                 backgroundColor: '#F59E0B'
                             }]
                         },

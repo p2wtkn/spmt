@@ -31,7 +31,7 @@ studentCheck();
         <div class="main">
             <div class="card card-custom">
                 <h4 class="text-primary fw-bold mb-4"><i class="fas fa-book-reader me-2"></i>ความต้องการเรียน</h4>
-                <form action="student_act.php" method="post">
+                <form action="learner_act.php" method="post">
                     <div class="table-responsive">
                         <table class="table table-borderless align-middle">
                             <thead class="small text-muted">
@@ -72,23 +72,29 @@ studentCheck();
                                 </tr>
                             </tbody>
                         </table>
+                        <?php if (isset($_SESSION['ld_notification'])): ?>
+                            <div class="alert alert-<?= $_SESSION['ld_notif_type'] ?> alert-dismissible fade show rounded-3 mb-4" role="alert">
+                                <i class="fas fa-info-circle me-2"></i><?php echo $_SESSION['ld_notification']; ?>
+                            </div>
+                            <?php unset($_SESSION['ld_notification']);
+                            unset($_SESSION['ld_notif_type']); ?>
+                        <?php endif; ?>
                         <button type="submit" name="learner_submit" class="btn btn-primary shadow-sm mt-2 px-4"><i class="fas fa-save me-2"></i>บันทึก</button>
-                        <p><?= $_SESSION['ld_notification'] ?></p>
                     </div>
                 </form>
             </div>
 
             <div class="card card-custom">
                 <h5 class="fw-bold mb-4"><i class="fas fa-list me-2"></i>ระบบจับคู่การเรียนการสอน</h5>
-                <form action="student_act.php" method="POST">
+                <form action="learner_act.php" method="POST">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="text-center">#</th>
-                                    <th>วิชา</th>
-                                    <th>ปี/เดือน/วัน</th>
-                                    <th>ช่วงเวลา</th>
+                                    <th class="text-center">วิชา</th>
+                                    <th class="text-center">ปี/เดือน/วัน</th>
+                                    <th class="text-center">ช่วงเวลา</th>
+                                    <th class="text-center">สถานะ</th>
                                     <th class="text-center">จัดการ</th>
                                 </tr>
                             </thead>
@@ -96,24 +102,49 @@ studentCheck();
                                 <?php
 
                                 $user_id = $_SESSION['user_id'];
-                                $ld_sql = "SELECT ld.*, s.subject_name
-                                        FROM learner_demand ld
-                                        LEFT JOIN subject s ON ld.subject_id = s.subject_id
-                                        WHERE user_id='$user_id'";
-                                $result = $conn->query($ld_sql);
+                                $ld_sql = "SELECT ld.*,
+                                            s.subject_name,
+                                            tl.teaching_log_id,
+                                            tl.ld_id AS log_ld_id
+                                            FROM learner_demand ld
+                                            LEFT JOIN teaching_log tl
+                                            ON ld.ld_id = tl.ld_id
+                                            LEFT JOIN subject s
+                                            ON ld.subject_id = s.subject_id
+                                            WHERE ld.user_id = '$user_id'
+                                            ORDER BY ld.convenience_day";
 
-                                if (mysqli_num_rows($result) > 0) {
+                                $ld_result = $conn->query($ld_sql);
+
+                                if (mysqli_num_rows($ld_result) > 0) {
                                     $i = 1;
-                                    while ($data = mysqli_fetch_array($result)) {
+                                    while ($data = mysqli_fetch_array($ld_result)) {
+                                        $subject = $data['subject_name'];
+                                        $date = $data['convenience_day'];
+                                        $timePeriod = $data['convenience_time'];
+                                        $time = timeSwitch($timePeriod);
+                                        $ld_id = $data['ld_id'];
+                                        $log_ld_id = $data['log_ld_id'];
                                 ?>
                                         <tr> 
-                                            <td class="text-center fw-bold"><?php echo $i; ?></td>
-                                            <td><?php echo $data['subject_name'] ?></td>
-                                            <td><?php echo $data['convenience_day']; ?></td>
-                                            <td><?php $no = $data['convenience_time'];
-                                                timeSwitch($no); ?></td>
+                                            <td class="text-center"><?php echo $subject; ?></td>
+                                            <td class="text-center"><?php echo $date; ?></td>
+                                            <td class="text-center"><?php echo $time; ?></td>
                                             <td class="text-center">
-                                                <a href="student_act.php?type=match&ld_id=<?php echo $data['ld_id']; ?>" class="btn btn-primary btn-sm"><i class="fas fa-hands-helping me-1"></i> จับคู่</a>
+                                                <?php if(!$log_ld_id): ?>
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning mb-1">บันทึกสำเร็จ โปรดจับคู่</span><br>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success bg-opacity-10 text-success mb-1">ผู้สอนยืนยัน</span><br>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-center">
+                                                <?php if(!$log_ld_id): ?>
+                                                        <a href="learner_act.php?type=match&ld_id=<?php echo $data['ld_id']; ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-hands-helping me-1"></i> จับคู่</a>
+                                                        <a href="learner_act.php?type=edit&ld_id=<?php echo $ld_id ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit me-1"></i>แก้ไข</a>
+                                                        <a href="learner_act.php?type=delete&ld_id=<?php echo $ld_id ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('ยืนยันการลบ?')"><i class="fas fa-trash"></i>ลบ</a>
+                                                <?php else: ?>
+                                                    <a href="learner_act.php?type=ld_detail&teaching_log_id=<?= $data['teaching_log_id']; ?>" class="btn btn-sm btn-outline-primary"><i class="fas fa-info-circle me-1"></i>รายละเอียด</a>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php
@@ -121,7 +152,7 @@ studentCheck();
                                     }
                                 } else { ?>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">ไม่พบข้อมูลความต้องการเรียน</td>
+                                        <td colspan="4" class="text-center text-muted py-4">ไม่พบข้อมูลความต้องการเรียน</td>
                                     </tr>
                                 <?php
                                 }
