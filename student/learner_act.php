@@ -26,7 +26,8 @@ if (isset($_GET['type']) && $_GET['type'] == "match") {
             $td_sql = "SELECT td_id FROM teaching_demand 
                        WHERE subject_id = '$subject_id' 
                        AND available_day = '$day' 
-                       AND available_time = '$time'";
+                       AND available_time = '$time'
+                       AND user_id != '$user_id'";
             $td_res = $conn->query($td_sql);
 
             if ($td_res->num_rows > 0) {
