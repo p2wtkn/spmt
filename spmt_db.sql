@@ -68,19 +68,18 @@ CREATE TABLE `redemptions` (
   `redemption_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `reward_id` int(11) NOT NULL,
-  `redemption_date` date NOT NULL,
-  `status` int(11) NOT NULL
+  `redemption_date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `redemptions`
 --
 
-INSERT INTO `redemptions` (`redemption_id`, `user_id`, `reward_id`, `redemption_date`, `status`) VALUES
-(1, 1, 1, '2026-05-06', 0),
-(2, 1, 1, '2026-05-06', 0),
-(3, 1, 1, '2026-05-06', 0),
-(4, 1, 1, '2026-05-06', 1);
+INSERT INTO `redemptions` (`redemption_id`, `user_id`, `reward_id`, `redemption_date`) VALUES
+(1, 1, 1, '2026-05-06'),
+(2, 1, 1, '2026-05-06'),
+(3, 1, 1, '2026-05-06'),
+(4, 1, 1, '2026-05-06');
 
 -- --------------------------------------------------------
 
