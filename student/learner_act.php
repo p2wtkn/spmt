@@ -292,7 +292,7 @@ if ($type == "edit") {
                     ?>
                     <div class="main">
                         <div class="card card-custom">
-                            <h4 class="text-primary fw-bold mb-4"><i class="fas fa-edit me-1"></i>แก้ไขความต้องการช่วยสอน</h4>
+                            <h4 class="text-primary fw-bold mb-4"><i class="fas fa-edit me-1"></i>แก้ไขความต้องการช่วยเรียน</h4>
                             <form action="learner_act.php" method="post">
                                 <div class="table-responsive">
                                     <table class="table table-borderless align-middle">
